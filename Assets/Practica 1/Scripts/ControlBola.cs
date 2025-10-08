@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ControlBola : MonoBehaviour
 {
-    public Transform CamaraPrincipal;
+    //variables úblicas hacen referencia a la camara y al score
+    public CameraFollow cameraFollow;
+    public ScoreManager scoreManager;
     // variables que controlan al objeto bola
     public Rigidbody rb;
     //variables para apuntar
@@ -19,7 +22,8 @@ public class ControlBola : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        // PISTA: Obtener el componente Rigidbody de esta bola
+         rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -59,11 +63,40 @@ public class ControlBola : MonoBehaviour
     void Lanzar()
     {
         haSidoLanzada = true;
-        rb.AddForce(Vector3.forward * fuerzaDeLanzamiento);
 
-        if (CamaraPrincipal != null)
+        if (rb != null)
         {
-            CamaraPrincipal.SetParent(transform);
+            rb.AddForce(Vector3.forward * fuerzaDeLanzamiento);
         }
+        else
+        {
+            Debug.LogWarning("rb no esta asignado" + gameObject.name);
+        }
+
+        //Iniciar seguimiento de la camara si existe
+        if (cameraFollow != null) cameraFollow.IniciarSeguimiento();
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        //Si colisiona con un pino (cuando quiero que algo suceda al contactar con otro objeto)
+        if (collision.gameObject.CompareTag("Pin"))
+        {
+            //Detener seguimiento de camara si no es null
+            if (cameraFollow != null)
+            {
+                cameraFollow.DetenerSeguimiento();
+            }
+            //Calcular puntaje tras un pequeño retraso
+            if (scoreManager != null)
+            {
+                Invoke("CalcularPuntaje", 0f);
+            }
+        }
+    }
+
+    void CalcularPuntaje()
+    {
+        //llamar al ScoreManager para ctualizar puntos
+        scoreManager.CalcularPuntaje();
     }
 } //BIEN BENIDO A LA ENTRADA AL INFIERNO
